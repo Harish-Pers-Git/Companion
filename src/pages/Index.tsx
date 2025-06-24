@@ -1,0 +1,98 @@
+import React from "react";
+import Ribbons from "../components/Ribbons";
+import { useNavigate } from "react-router-dom";
+
+export default function Index() {
+  const navigate = useNavigate();
+
+  const handleClick = () => {
+    navigate("/room");
+  };
+
+  return (
+    <div
+      style={{
+        position: "relative",
+        minHeight: "100vh",
+        width: "100vw",
+        overflow: "hidden",
+        fontFamily: "'Quicksand', 'Nunito', Arial, sans-serif",
+        background: "radial-gradient(circle at 20% 30%, #a259c6 0%, #e66465 100%)"
+      }}
+    >
+      {/* Ribbons background */}
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          zIndex: 0,
+          width: "100%",
+          height: "100%",
+        }}
+      >
+        <Ribbons
+          baseThickness={30}
+          colors={["#ffffff"]}
+          speedMultiplier={0.5}
+          maxAge={500}
+          enableFade={false}
+          enableShaderEffect={true}
+        />
+      </div>
+
+      {/* Centered content */}
+      <div
+        className="flex flex-col items-center justify-center text-center"
+        style={{
+          position: "relative",
+          zIndex: 1,
+          minHeight: "100vh",
+          width: "100vw",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <h1
+          style={{
+            color: "#fff",
+            fontSize: "4rem",
+            lineHeight: 1.1,
+            fontWeight: 700,
+            textShadow: "0 8px 32px rgba(80,0,120,0.25), 0 1.5px 0 #fff",
+            fontFamily: "'Quicksand', 'Nunito', Arial, sans-serif",
+          }}
+        >
+          The AI companion<br />who cares
+        </h1>
+        <p
+          style={{
+            color: "#fff",
+            fontSize: "1.5rem",
+            fontWeight: 700,
+            textShadow: "0 4px 16px rgba(80,0,120,0.15)",
+            fontFamily: "'Quicksand', 'Nunito', Arial, sans-serif",
+            marginTop: "1rem",
+          }}
+        >
+          Always here to listen and talk.<br />
+          Always on your side
+        </p>
+        <button
+          className="bg-white text-purple-700 font-semibold px-8 py-4 rounded-full text-lg shadow-lg hover:bg-purple-100 transition mt-8"
+          style={{
+            boxShadow: "0 8px 32px rgba(80,0,120,0.15)",
+            fontFamily: "'Quicksand', 'Nunito', Arial, sans-serif",
+            marginTop: "2rem",
+          }}
+          onClick={handleClick}
+        >
+          Start the companion
+        </button>
+      </div>
+      {/* Google Fonts link in your index.html head:
+      <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@700&family=Nunito:wght@700&display=swap" rel="stylesheet">
+      */}
+    </div>
+  );
+}

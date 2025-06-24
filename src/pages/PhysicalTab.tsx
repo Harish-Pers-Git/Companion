@@ -1,0 +1,3 @@
+import PhysicalTab from "./PhysicalTab";
+// ...
+{activeTab === "Physical" && <PhysicalTab />}
