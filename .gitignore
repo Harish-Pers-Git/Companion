@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+public/peaceful.mp3
+public/videoplayback.mp3
