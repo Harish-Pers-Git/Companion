@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from "react";
 import { FaComments, FaBrain, FaBook, FaUser, FaThumbtack, FaBars, FaUserFriends, FaRunning, FaHeartbeat } from "react-icons/fa";
 import { GiArtificialIntelligence, GiDuration } from "react-icons/gi"; // For Activities
 import { useNavigate } from "react-router-dom";
+import ReactPlayer from "react-player";
+import PianoGame from "../components/PianoGame";
 
 type Exercise = {
   name: string;
@@ -209,17 +211,17 @@ export default function CompanionRoom() {
   const musicTracks = [
     {
       title: "Calm Meditation",
-      file: "/music/meditation.mp3",
+      url: "/videoplayback.mp3",
       duration: "5:30"
     },
     {
       title: "Peaceful Yoga Flow",
-      file: "/music/yoga-flow.mp3",
+      url: "/peaceful.mp3",
       duration: "6:15"
     },
     {
       title: "Mindful Breathing",
-      file: "/music/breathing.mp3",
+      url: "https://www.youtube.com/watch?v=YOUR_VIDEO_ID_3",
       duration: "4:45"
     }
   ];
@@ -461,7 +463,14 @@ export default function CompanionRoom() {
           </div>
         )}
         {activeTab === "Activity" && (
-          <div style={{ margin: "32px auto 0 auto", width: 650, background: "rgba(60,70,150,0.2)", borderRadius: 24, padding: 24 }}>
+          <div style={{
+            margin: "32px auto 0 auto",
+            width: activitySubTab === 'GAMES' ? 940 : 650,
+            background: "rgba(60,70,150,0.2)",
+            borderRadius: 24,
+            padding: 24,
+            transition: 'width 0.3s ease-in-out'
+          }}>
             {/* Sub-tabs for Activity */}
             <div style={{ display: 'flex', justifyContent: 'center', gap: 16, marginBottom: 24 }}>
               <button
@@ -497,6 +506,23 @@ export default function CompanionRoom() {
                 }}
               >
                 MUSIC
+              </button>
+              <button
+                onClick={() => setActivitySubTab('GAMES')}
+                style={{
+                  padding: '8px 24px',
+                  borderRadius: 16,
+                  border: 'none',
+                  background: activitySubTab === 'GAMES' ? '#6c7ee1' : 'rgba(255,255,255,0.08)',
+                  color: activitySubTab === 'GAMES' ? '#fff' : '#e0e6ff',
+                  fontWeight: 700,
+                  fontSize: 18,
+                  cursor: 'pointer',
+                  boxShadow: activitySubTab === 'GAMES' ? '0 2px 12px rgba(80,0,120,0.10)' : 'none',
+                  transition: 'background 0.2s',
+                }}
+              >
+                GAMES
               </button>
             </div>
             {activitySubTab === 'YOGA' && (
@@ -546,20 +572,26 @@ export default function CompanionRoom() {
                         <div style={{ fontWeight: 600, fontSize: 18, marginBottom: 4 }}>{track.title}</div>
                         <div style={{ fontSize: 14, color: "#e0e6ff" }}>{track.duration}</div>
                       </div>
-                      <audio
-                        controls
-                        style={{
-                          backgroundColor: "transparent",
-                          borderRadius: 20,
-                        }}
-                      >
-                        <source src={track.file} type="audio/mp3" />
-                        Your browser does not support the audio element.
-                      </audio>
+                      {track.url.endsWith('.mp3') ? (
+                        <audio controls style={{ width: 300, height: 50 }}>
+                          <source src={track.url} type="audio/mp3" />
+                          Your browser does not support the audio element.
+                        </audio>
+                      ) : (
+                        <ReactPlayer
+                          url={track.url}
+                          controls
+                          width="300px"
+                          height="50px"
+                        />
+                      )}
                     </div>
                   ))}
                 </div>
               </>
+            )}
+            {activitySubTab === 'GAMES' && (
+              <PianoGame />
             )}
           </div>
         )}

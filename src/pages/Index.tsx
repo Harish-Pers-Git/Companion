@@ -20,12 +20,33 @@ export default function Index() {
         background: "radial-gradient(circle at 20% 30%, #a259c6 0%, #e66465 100%)"
       }}
     >
+      {/* Background Video */}
+      <video
+        autoPlay
+        loop
+        muted
+        playsInline
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          objectFit: 'cover',
+          zIndex: 0,
+          opacity: 0.45,
+          pointerEvents: 'none',
+        }}
+      >
+        <source src="/smoke.mp4" type="video/mp4" />
+        Your browser does not support the video tag.
+      </video>
       {/* Ribbons background */}
       <div
         style={{
           position: "absolute",
           inset: 0,
-          zIndex: 0,
+          zIndex: 1,
           width: "100%",
           height: "100%",
         }}
@@ -45,7 +66,7 @@ export default function Index() {
         className="flex flex-col items-center justify-center text-center"
         style={{
           position: "relative",
-          zIndex: 1,
+          zIndex: 2,
           minHeight: "100vh",
           width: "100vw",
           display: "flex",
