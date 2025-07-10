@@ -1,5 +1,4 @@
 import React from "react";
-import Ribbons from "../components/Ribbons";
 import { useNavigate } from "react-router-dom";
 
 export default function Index() {
@@ -38,9 +37,9 @@ export default function Index() {
           pointerEvents: 'none',
         }}
       >
-        <source src="/smoke.mp4" type="video/mp4" />
+        <source src="/Sunset.mp4" type="video/mp4" />
         Your browser does not support the video tag.
-      </video>
+      </video> 
       {/* Ribbons background */}
       <div
         style={{
@@ -51,14 +50,7 @@ export default function Index() {
           height: "100%",
         }}
       >
-        <Ribbons
-          baseThickness={30}
-          colors={["#ffffff"]}
-          speedMultiplier={0.5}
-          maxAge={500}
-          enableFade={false}
-          enableShaderEffect={true}
-        />
+        {/* Ribbons removed */}
       </div>
 
       {/* Centered content */}

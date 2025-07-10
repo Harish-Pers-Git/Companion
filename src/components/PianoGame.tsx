@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 // Single AudioContext for the component's lifecycle
 let audioContext: AudioContext | null = null;
@@ -12,31 +12,19 @@ const notes: { [key: string]: { freq: number } } = {
   'G#5': { freq: 830.61 }, 'A5': { freq: 880.00 }, 'A#5': { freq: 932.33 }, 'B5': { freq: 987.77 },
 };
 
-const PianoKey = ({ noteName, isBlack }: { noteName: string, isBlack: boolean }) => {
-    
-  const playNote = () => {
-    if (!audioContext) return;
-    const note = notes[noteName];
-    if (!note) return;
+// Keyboard mapping for two octaves (QWERTY)
+const keyMap: { [key: string]: string } = {
+  // White keys
+  'a': 'C4', 's': 'D4', 'd': 'E4', 'f': 'F4', 'g': 'G4', 'h': 'A4', 'j': 'B4',
+  'k': 'C5', 'l': 'D5', ';': 'E5', "'": 'F5', 'z': 'G5', 'x': 'A5', 'c': 'B5',
+  // Black keys
+  'w': 'C#4', 'e': 'D#4', 't': 'F#4', 'y': 'G#4', 'u': 'A#4',
+  'o': 'C#5', 'p': 'D#5', '[': 'F#5', ']': 'G#5', '\\': 'A#5',
+};
 
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
+const PianoKey = ({ noteName, isBlack, onPlay, isActive }: { noteName: string, isBlack: boolean, onPlay: (note: string) => void, isActive: boolean }) => {
+  const playNote = () => onPlay(noteName);
 
-    oscillator.type = 'sine';
-    oscillator.frequency.setValueAtTime(note.freq, audioContext.currentTime);
-    
-    // Simple attack/decay envelope
-    gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-    gainNode.gain.linearRampToValueAtTime(0.5, audioContext.currentTime + 0.01);
-    gainNode.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 1);
-
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-    
-    oscillator.start();
-    oscillator.stop(audioContext.currentTime + 1);
-  };
-  
   const keyStyle: React.CSSProperties = {
     boxSizing: 'border-box',
     border: '1px solid #333',
@@ -49,57 +37,89 @@ const PianoKey = ({ noteName, isBlack }: { noteName: string, isBlack: boolean })
     paddingBottom: '10px',
     fontWeight: 'bold',
     transition: 'background-color 0.1s ease',
+    backgroundColor: isActive ? (isBlack ? '#888' : '#b3e5fc') : (isBlack ? '#333' : '#fff'),
+    color: isBlack ? 'white' : '#333',
+    width: isBlack ? '36px' : '60px',
+    height: isBlack ? '140px' : '220px',
+    position: isBlack ? 'absolute' : 'relative',
+    zIndex: isBlack ? 2 : 1,
+    margin: isBlack ? undefined : '0 1px',
   };
-
-  const whiteKeyStyle: React.CSSProperties = {
-    ...keyStyle,
-    width: '60px',
-    height: '220px',
-    backgroundColor: '#fff',
-    color: '#333',
-    margin: '0 1px',
-  };
-
-  const blackKeyStyle: React.CSSProperties = {
-    ...keyStyle,
-    width: '36px',
-    height: '140px',
-    backgroundColor: '#333',
-    color: 'white',
-    position: 'absolute',
-    zIndex: 2,
-  };
-  
-  const style = isBlack ? blackKeyStyle : whiteKeyStyle;
 
   return (
-    <div style={style} onMouseDown={playNote}
-      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = isBlack ? '#555' : '#eee')}
-      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = isBlack ? '#333' : '#fff')}>
+    <div
+      style={keyStyle}
+      onMouseDown={playNote}
+      onMouseEnter={e => {
+        if (e.buttons === 1) playNote();
+      }}
+    >
       {noteName.replace(/#\d/,'#').replace(/\d/,'')}
     </div>
   );
 };
 
 const PianoGame = () => {
-    
+  const [activeNotes, setActiveNotes] = useState<string[]>([]);
+  const pianoRef = useRef<HTMLDivElement>(null);
+
+  // Play a note
+  const playNote = (noteName: string) => {
+    if (!audioContext) return;
+    const note = notes[noteName];
+    if (!note) return;
+    setActiveNotes((prev) => [...new Set([...prev, noteName])]);
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(note.freq, audioContext.currentTime);
+    gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+    gainNode.gain.linearRampToValueAtTime(0.5, audioContext.currentTime + 0.01);
+    gainNode.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 1);
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + 1);
+    setTimeout(() => {
+      setActiveNotes((prev) => prev.filter((n) => n !== noteName));
+    }, 200);
+  };
+
+  // Mouse drag logic
   useEffect(() => {
-    // Initialize AudioContext on component mount after a user interaction
+    const handleMouseUp = () => setActiveNotes([]);
+    window.addEventListener('mouseup', handleMouseUp);
+    return () => window.removeEventListener('mouseup', handleMouseUp);
+  }, []);
+
+  // Keyboard logic
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const note = keyMap[e.key.toLowerCase()];
+      if (note && !activeNotes.includes(note)) {
+        playNote(note);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activeNotes]);
+
+  // AudioContext init
+  useEffect(() => {
     const initAudio = () => {
-        if (!audioContext) {
-            audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-        }
-        document.removeEventListener('click', initAudio);
+      if (!audioContext) {
+        audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      }
+      document.removeEventListener('click', initAudio);
     };
     document.addEventListener('click', initAudio);
-
     return () => {
-        if (audioContext && audioContext.state !== 'closed') {
-            audioContext.close().catch(e => console.error(e));
-            audioContext = null;
-        }
-        document.removeEventListener('click', initAudio);
-    }
+      if (audioContext && audioContext.state !== 'closed') {
+        audioContext.close().catch(e => console.error(e));
+        audioContext = null;
+      }
+      document.removeEventListener('click', initAudio);
+    };
   }, []);
 
   const pianoContainerStyle: React.CSSProperties = {
@@ -107,36 +127,50 @@ const PianoGame = () => {
     position: 'relative',
     justifyContent: 'center',
     height: '240px',
-    width: '882px', 
+    width: '882px',
     margin: 'auto',
     padding: '10px',
     backgroundColor: '#222',
     borderRadius: '10px',
     boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
+    userSelect: 'none',
   };
-  
+
   const whiteKeys = ['C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4', 'C5', 'D5', 'E5', 'F5', 'G5', 'A5', 'B5'];
   const blackKeys: { note: string; position: number }[] = [
-      { note: 'C#4', position: 1 }, { note: 'D#4', position: 2 },
-      { note: 'F#4', position: 4 }, { note: 'G#4', position: 5 }, { note: 'A#4', position: 6 },
-      { note: 'C#5', position: 8 }, { note: 'D#5', position: 9 },
-      { note: 'F#5', position: 11 }, { note: 'G#5', position: 12 }, { note: 'A#5', position: 13 },
+    { note: 'C#4', position: 1 }, { note: 'D#4', position: 2 },
+    { note: 'F#4', position: 4 }, { note: 'G#4', position: 5 }, { note: 'A#4', position: 6 },
+    { note: 'C#5', position: 8 }, { note: 'D#5', position: 9 },
+    { note: 'F#5', position: 11 }, { note: 'G#5', position: 12 }, { note: 'A#5', position: 13 },
   ];
 
   return (
     <div>
-        <h2 style={{ textAlign: "center", marginBottom: 16 }}>Piano</h2>
-        <p style={{ textAlign: 'center', marginBottom: 16, fontSize: 14, color: '#e0e6ff' }}>Click the keys to play a note!</p>
-        <div style={pianoContainerStyle}>
-          {whiteKeys.map((noteName) => (
-            <PianoKey key={noteName} noteName={noteName} isBlack={false} />
-          ))}
-          {blackKeys.map(({ note, position }) => (
-              <div key={note} style={{ position: 'absolute', top: 10, left: 10 + position * 62 - (36/2) }}>
-                  <PianoKey noteName={note} isBlack={true} />
-              </div>
-          ))}
-        </div>
+      <h2 style={{ textAlign: "center", marginBottom: 16 }}>Piano</h2>
+      <p style={{ textAlign: 'center', marginBottom: 16, fontSize: 14, color: '#e0e6ff' }}>
+        Click, drag, or use your keyboard (A S D F G H J K L ; ' Z X C for white, W E T Y U O P [ ] \ for black keys)
+      </p>
+      <div style={pianoContainerStyle} ref={pianoRef}>
+        {whiteKeys.map((noteName) => (
+          <PianoKey
+            key={noteName}
+            noteName={noteName}
+            isBlack={false}
+            onPlay={playNote}
+            isActive={activeNotes.includes(noteName)}
+          />
+        ))}
+        {blackKeys.map(({ note, position }) => (
+          <div key={note} style={{ position: 'absolute', top: 10, left: 10 + position * 62 - (36 / 2) }}>
+            <PianoKey
+              noteName={note}
+              isBlack={true}
+              onPlay={playNote}
+              isActive={activeNotes.includes(note)}
+            />
+          </div>
+        ))}
+      </div>
     </div>
   );
 };

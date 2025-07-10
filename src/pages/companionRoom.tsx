@@ -5,6 +5,17 @@ import { useNavigate } from "react-router-dom";
 import ReactPlayer from "react-player";
 import PianoGame from "../components/PianoGame";
 
+// Global speech reference to track current utterance
+let currentUtterance: SpeechSynthesisUtterance | null = null;
+
+const conversationalQuestions = [
+  { q: "How are you feeling today?", a: ["Fine", "Good"] },
+  { q: "Did you have a good day?", a: ["Yes", "Could be better"] },
+  { q: "Ready for a quick chat?", a: ["Always", "Sure"] },
+  { q: "What's on your mind?", a: ["Not much", "Thinking"] },
+  { q: "Shall we do something fun?", a: ["Yes!", "Okay"] },
+];
+
 type Exercise = {
   name: string;
   duration?: number;
@@ -190,6 +201,47 @@ function speakCount(type: string, count: number, onDone: () => void, shouldConti
   speakNext();
 }
 
+function ExerciseCard({ imageSrc, name, duration }) {
+  const [count, setCount] = useState(1);
+
+  useEffect(() => {
+    if (count > duration) return;
+    const timer = setTimeout(() => setCount(count + 1), 1000);
+    return () => clearTimeout(timer);
+  }, [count, duration]);
+
+  return (
+    <div style={{ textAlign: "center" }}>
+      <img src={imageSrc} alt={name} style={{ height: 200 }} />
+      <h2>{name}</h2>
+      <div>{duration} sec</div>
+      <div style={{ fontSize: 32, marginTop: 16 }}>
+        {count <= duration ? count : "Done!"}
+      </div>
+    </div>
+  );
+}
+
+function startSynchronizedCountdown(countTo, setModalCount, onDone) {
+  let current = 1;
+  const synth = window.speechSynthesis;
+
+  function speakNext() {
+    setModalCount(current);
+    const utter = new window.SpeechSynthesisUtterance(current.toString());
+    synth.speak(utter);
+    utter.onend = () => {
+      if (current < countTo) {
+        current++;
+        speakNext();
+      } else {
+        onDone();
+      }
+    };
+  }
+  speakNext();
+}
+
 export default function CompanionRoom() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("Companion");
@@ -200,6 +252,12 @@ export default function CompanionRoom() {
   const [physicalSubTab, setPhysicalSubTab] = useState('Warm-Up');
   const [yogaSubTab, setYogaSubTab] = useState('YOGA');
   const [activitySubTab, setActivitySubTab] = useState('YOGA');
+  const [isAsking, setIsAsking] = useState(false);
+  const [currentQuestion, setCurrentQuestion] = useState<{ q: string; a: string[] } | null>(null);
+  const [questionVisible, setQuestionVisible] = useState(false);
+  const [questionIntervalId, setQuestionIntervalId] = useState<NodeJS.Timeout | null>(null);
+  const [usedQuestions, setUsedQuestions] = useState<number[]>([]);
+  const [modalCount, setModalCount] = useState<number | undefined>(undefined);
 
   // Ref to always have the latest showModal value
   const showModalRef = useRef(showModal);
@@ -231,9 +289,11 @@ export default function CompanionRoom() {
     setIsPlaying(true);
     setShowAppreciation(null);
     setShowModal(true);
+    // Only use speakCount for rep-based exercises
     const allExercises = [...exercises, ...coreStrengthExercises, ...yogaExercises];
     const ex = allExercises[idx];
     const count = ex.type === "reps" ? ex.reps! : ex.duration!;
+    if (ex.type === "reps") {
     speakCount(
       ex.type,
       count,
@@ -248,6 +308,7 @@ export default function CompanionRoom() {
       },
       () => showModalRef.current // always gets the latest value
     );
+    }
   };
 
   const closeModal = () => {
@@ -258,16 +319,181 @@ export default function CompanionRoom() {
     setShowAppreciation(null);
   };
 
+  const speakText = (text: string) => {
+    const synth = window.speechSynthesis;
+    synth.cancel(); // Cancel previous speech to avoid overlap
+    
+    // Stop current utterance if it exists
+    if (currentUtterance) {
+      currentUtterance.onend = null;
+      currentUtterance.onerror = null;
+    }
+    
+    currentUtterance = new SpeechSynthesisUtterance(text);
+    synth.speak(currentUtterance);
+    
+    // Clean up reference when speech ends
+    currentUtterance.onend = () => {
+      currentUtterance = null;
+    };
+    currentUtterance.onerror = () => {
+      currentUtterance = null;
+    };
+  };
+
+  const stopAllSpeech = () => {
+    const synth = window.speechSynthesis;
+    
+    // Stop current utterance
+    if (currentUtterance) {
+      currentUtterance.onend = null;
+      currentUtterance.onerror = null;
+      currentUtterance = null;
+    }
+    
+    // Multiple cancellation attempts
+    synth.cancel();
+    synth.pause();
+    synth.resume();
+    synth.cancel();
+    
+    // Force stop with timeout
+    setTimeout(() => {
+      synth.cancel();
+      if (synth.speaking) {
+        synth.pause();
+        synth.cancel();
+      }
+    }, 100);
+    
+    // Additional cleanup
+    setTimeout(() => {
+      synth.cancel();
+      currentUtterance = null;
+    }, 200);
+  };
+
+  const askRandomQuestion = () => {
+    setQuestionVisible(false); // Fade out old question
+    setTimeout(() => {
+      let availableQuestions = conversationalQuestions.map((_, index) => index).filter(index => !usedQuestions.includes(index));
+      
+      // If all questions have been used, reset the used questions
+      if (availableQuestions.length === 0) {
+        setUsedQuestions([]);
+        availableQuestions = conversationalQuestions.map((_, index) => index);
+      }
+      
+      const randomIndex = availableQuestions[Math.floor(Math.random() * availableQuestions.length)];
+      const nextQuestion = conversationalQuestions[randomIndex];
+      
+      setUsedQuestions(prev => [...prev, randomIndex]);
+      setCurrentQuestion(nextQuestion);
+      setQuestionVisible(true); // Fade in new one
+      
+      // Speak both question and answers
+      const fullText = `${nextQuestion.q} ${nextQuestion.a[0]} or ${nextQuestion.a[1]}`;
+      speakText(fullText);
+    }, 300);
+  };
+
+  const toggleAsking = () => {
+    const currentlyAsking = !isAsking;
+    setIsAsking(currentlyAsking);
+
+    if (currentlyAsking) {
+      setUsedQuestions([]); // Reset used questions when starting
+      askRandomQuestion(); // Ask first question immediately
+      const intervalId = setInterval(askRandomQuestion, 3300); // Ask every 3.3 seconds
+      setQuestionIntervalId(intervalId);
+    } else {
+      if (questionIntervalId) {
+        clearInterval(questionIntervalId);
+        setQuestionIntervalId(null);
+      }
+      // Stop all speech synthesis immediately
+      stopAllSpeech();
+      setQuestionVisible(false);
+      setTimeout(() => setCurrentQuestion(null), 300); // Clear after fade out
+    }
+  };
+
+  // Cleanup effect to stop speech when component unmounts or when stopping
+  useEffect(() => {
+    return () => {
+      if (questionIntervalId) {
+        clearInterval(questionIntervalId);
+      }
+      stopAllSpeech();
+    };
+  }, [questionIntervalId]);
+
+  const handleAnswerClick = () => {
+    // Hide the current question UI, the timer will show the next one
+    setQuestionVisible(false);
+  };
+
+  // Add effect to handle modalCount countdown
+  useEffect(() => {
+    if (showModal && isPlaying && currentExercise !== null) {
+      const allExercises = [...exercises, ...coreStrengthExercises, ...yogaExercises];
+      const ex = allExercises[currentExercise];
+      const count = ex.type === "reps" ? ex.reps : ex.duration;
+      if (ex.type === "time") {
+        startSynchronizedCountdown(count, setModalCount, () => {
+          setIsPlaying(false);
+          setShowAppreciation(appreciationWords[Math.floor(Math.random() * appreciationWords.length)]);
+          setTimeout(() => {
+            setShowAppreciation(null);
+            setShowModal(false);
+            setCurrentExercise(null);
+          }, 2000);
+        });
+      }
+      // For reps, you may want to increment modalCount elsewhere (e.g., on user action)
+    } else {
+      setModalCount(undefined);
+    }
+  }, [showModal, isPlaying, currentExercise]);
+
   return (
     <div
       style={{
         minHeight: "100vh",
-        background: "linear-gradient(180deg, #5a7be7 0%, #3b4cb1 100%)",
         color: "#fff",
         fontFamily: "Quicksand, Nunito, Arial, sans-serif",
         position: "relative",
       }}
     >
+      <video
+        autoPlay
+        loop
+        muted
+        playsInline
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+          zIndex: -2,
+          filter: "blur(4px)",
+        }}
+      >
+        <source src="/Sunset.mp4" type="video/mp4" />
+      </video>
+      <div
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          width: "100%",
+          height: "100%",
+          background: "rgba(0, 0, 0, 0.5)",
+          zIndex: -1,
+        }}
+      />
       {/* Top Bar */}
       <div
         style={{
@@ -281,7 +507,7 @@ export default function CompanionRoom() {
         <div
           onClick={() => navigate("/")}
           style={{
-            background: "rgba(60,70,150,0.4)",
+            background: "rgba(0,0,0,0.3)",
             borderRadius: "50%",
             width: 48,
             height: 48,
@@ -302,7 +528,7 @@ export default function CompanionRoom() {
         <div
           style={{
             display: "flex",
-            background: "rgba(60,70,150,0.4)",
+            background: "rgba(0,0,0,0.3)",
             borderRadius: 32,
             padding: "0.5rem 2rem",
             gap: "1.5rem",
@@ -323,7 +549,7 @@ export default function CompanionRoom() {
                 display: "flex",
                 alignItems: "center",
                 gap: 8,
-                background: activeTab === tab.name ? "#6c7ee1" : "transparent",
+                background: activeTab === tab.name ? "#ff8c00" : "transparent",
                 color: activeTab === tab.name ? "#fff" : "#e0e6ff",
                 border: "none",
                 borderRadius: 24,
@@ -343,7 +569,7 @@ export default function CompanionRoom() {
         {/* Right Hamburger */}
         <div
           style={{
-            background: "rgba(60,70,150,0.4)",
+            background: "rgba(0,0,0,0.3)",
             borderRadius: "50%",
             width: 48,
             height: 48,
@@ -359,19 +585,50 @@ export default function CompanionRoom() {
       </div>
 
       {/* Main Content */}
-      <div style={{ display: "flex", justifyContent: "left", width: "100%" }}>
+      <div style={{ display: "flex", justifyContent: "left", width: "100%", alignItems: 'center' }}>
         {activeTab === "Companion" && (
-          <div style={{ marginLeft: 60, marginBottom: 0 }}>
+          <div style={{ marginLeft: 60, marginBottom: 0, position: 'relative' }}>
             <img
               src="/3d.png"
               alt="Avatar"
-              style={{ width: 220, borderRadius: "50%" }}
-              
+              onClick={toggleAsking}
+              style={{ 
+                width: 220, 
+                borderRadius: "50%",
+                cursor: 'pointer',
+                transition: 'transform 0.2s ease',
+                transform: isAsking ? 'scale(1.05)' : 'scale(1)',
+              }}
             />
+            {isAsking && currentQuestion && (
+              <div style={{
+                position: 'absolute',
+                top: '50%',
+                left: '110%',
+                transform: 'translateY(-50%)',
+                width: '300px',
+                textAlign: 'center',
+                opacity: questionVisible ? 1 : 0,
+                transition: 'opacity 0.3s ease-in-out',
+              }}>
+                <div style={{
+                  background: 'rgba(0,0,0,0.3)',
+                  padding: '16px',
+                  borderRadius: '12px',
+                  marginBottom: '12px',
+                  fontSize: '18px',
+                  fontWeight: 600,
+                  color: '#fff',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                }}>
+                  {currentQuestion.q}
+                </div>
+              </div>
+            )}
           </div>
         )}
         {activeTab === "Physical" && (
-          <div style={{ margin: "32px auto 0 auto", width: 650, background: "rgba(60,70,150,0.2)", borderRadius: 24, padding: 24 }}>
+          <div style={{ margin: "32px auto 0 auto", width: 650, background: "rgba(0,0,0,0.2)", borderRadius: 24, padding: 24 }}>
             {/* Sub-tabs for Physical */}
             <div style={{ display: 'flex', justifyContent: 'center', gap: 16, marginBottom: 24 }}>
               <button
@@ -380,7 +637,7 @@ export default function CompanionRoom() {
                   padding: '8px 24px',
                   borderRadius: 16,
                   border: 'none',
-                  background: physicalSubTab === 'Warm-Up' ? '#6c7ee1' : 'rgba(255,255,255,0.08)',
+                  background: physicalSubTab === 'Warm-Up' ? '#ff8c00' : 'rgba(255,255,255,0.08)',
                   color: physicalSubTab === 'Warm-Up' ? '#fff' : '#e0e6ff',
                   fontWeight: 700,
                   fontSize: 18,
@@ -397,7 +654,7 @@ export default function CompanionRoom() {
                   padding: '8px 24px',
                   borderRadius: 16,
                   border: 'none',
-                  background: physicalSubTab === 'Core Functional Strength' ? '#6c7ee1' : 'rgba(255,255,255,0.08)',
+                  background: physicalSubTab === 'Core Functional Strength' ? '#ff8c00' : 'rgba(255,255,255,0.08)',
                   color: physicalSubTab === 'Core Functional Strength' ? '#fff' : '#e0e6ff',
                   fontWeight: 700,
                   fontSize: 18,
@@ -425,7 +682,7 @@ export default function CompanionRoom() {
                       <button
                         onClick={() => startExercise(idx)}
                         disabled={isPlaying || showModal}
-                        style={{ marginLeft: "auto", padding: "8px 18px", borderRadius: 8, border: "none", background: "#6c7ee1", color: "#fff", fontWeight: 600, cursor: isPlaying ? "not-allowed" : "pointer" }}
+                        style={{ marginLeft: "auto", padding: "8px 18px", borderRadius: 8, border: "none", background: "#ff8c00", color: "#fff", fontWeight: 600, cursor: isPlaying ? "not-allowed" : "pointer" }}
                       >
                         {isPlaying && currentExercise === idx && showModal ? "In Progress..." : "Start"}
                       </button>
@@ -451,7 +708,7 @@ export default function CompanionRoom() {
                       <button
                         onClick={() => startExercise(idx + exercises.length)}
                         disabled={isPlaying || showModal}
-                        style={{ marginLeft: "auto", padding: "8px 18px", borderRadius: 8, border: "none", background: "#6c7ee1", color: "#fff", fontWeight: 600, cursor: isPlaying ? "not-allowed" : "pointer" }}
+                        style={{ marginLeft: "auto", padding: "8px 18px", borderRadius: 8, border: "none", background: "#ff8c00", color: "#fff", fontWeight: 600, cursor: isPlaying ? "not-allowed" : "pointer" }}
                       >
                         {isPlaying && currentExercise === idx + exercises.length && showModal ? "In Progress..." : "Start"}
                       </button>
@@ -466,7 +723,7 @@ export default function CompanionRoom() {
           <div style={{
             margin: "32px auto 0 auto",
             width: activitySubTab === 'GAMES' ? 940 : 650,
-            background: "rgba(60,70,150,0.2)",
+            background: "rgba(0,0,0,0.2)",
             borderRadius: 24,
             padding: 24,
             transition: 'width 0.3s ease-in-out'
@@ -479,7 +736,7 @@ export default function CompanionRoom() {
                   padding: '8px 24px',
                   borderRadius: 16,
                   border: 'none',
-                  background: activitySubTab === 'YOGA' ? '#6c7ee1' : 'rgba(255,255,255,0.08)',
+                  background: activitySubTab === 'YOGA' ? '#ff8c00' : 'rgba(255,255,255,0.08)',
                   color: activitySubTab === 'YOGA' ? '#fff' : '#e0e6ff',
                   fontWeight: 700,
                   fontSize: 18,
@@ -496,7 +753,7 @@ export default function CompanionRoom() {
                   padding: '8px 24px',
                   borderRadius: 16,
                   border: 'none',
-                  background: activitySubTab === 'MUSIC' ? '#6c7ee1' : 'rgba(255,255,255,0.08)',
+                  background: activitySubTab === 'MUSIC' ? '#ff8c00' : 'rgba(255,255,255,0.08)',
                   color: activitySubTab === 'MUSIC' ? '#fff' : '#e0e6ff',
                   fontWeight: 700,
                   fontSize: 18,
@@ -513,7 +770,7 @@ export default function CompanionRoom() {
                   padding: '8px 24px',
                   borderRadius: 16,
                   border: 'none',
-                  background: activitySubTab === 'GAMES' ? '#6c7ee1' : 'rgba(255,255,255,0.08)',
+                  background: activitySubTab === 'GAMES' ? '#ff8c00' : 'rgba(255,255,255,0.08)',
                   color: activitySubTab === 'GAMES' ? '#fff' : '#e0e6ff',
                   fontWeight: 700,
                   fontSize: 18,
@@ -542,7 +799,7 @@ export default function CompanionRoom() {
                       <button
                         onClick={() => startExercise(idx + exercises.length + coreStrengthExercises.length)}
                         disabled={isPlaying || showModal}
-                        style={{ marginLeft: "auto", padding: "8px 18px", borderRadius: 8, border: "none", background: "#6c7ee1", color: "#fff", fontWeight: 600, cursor: isPlaying ? "not-allowed" : "pointer" }}
+                        style={{ marginLeft: "auto", padding: "8px 18px", borderRadius: 8, border: "none", background: "#ff8c00", color: "#fff", fontWeight: 600, cursor: isPlaying ? "not-allowed" : "pointer" }}
                       >
                         {isPlaying && currentExercise === idx + exercises.length + coreStrengthExercises.length && showModal ? "In Progress..." : "Start"}
                       </button>
@@ -614,7 +871,7 @@ export default function CompanionRoom() {
             background: "#fff",
             borderRadius: 24,
             padding: 40,
-            minWidth: 350,
+            minWidth: 400,
             minHeight: 400,
             display: "flex",
             flexDirection: "column",
@@ -627,9 +884,9 @@ export default function CompanionRoom() {
               const ex = allExercises[currentExercise];
               return (
                 <>
-                  <img src={ex.gif} alt={ex.name} style={{ width: 220, height: 220, borderRadius: 16, marginBottom: 24, objectFit: "contain" }} />
-                  <div style={{ fontWeight: 700, fontSize: 24, color: "#3b4cb1", marginBottom: 8 }}>{ex.name}</div>
-                  <div style={{ fontSize: 18, color: "#5a7be7", marginBottom: 16 }}>
+                  <img src={ex.gif} alt={ex.name} style={{ width: 250, height: 220, borderRadius: 16, marginBottom: 24, objectFit: "contain" }} />
+                  <div style={{ fontWeight: 700, fontSize: 24, color: "#333", marginBottom: 8 }}>{ex.name}</div>
+                  <div style={{ fontSize: 18, color: "#555", marginBottom: 16 }}>
                     {ex.type === "reps"
                       ? `${ex.reps} reps`
                       : `${ex.duration} sec`}
@@ -638,7 +895,26 @@ export default function CompanionRoom() {
                 </>
               );
             })()}
-            {isPlaying && <div style={{ color: "#3b4cb1", fontWeight: 600, fontSize: 20 }}>Counting...</div>}
+            {isPlaying && (
+              <div style={{ color: "#333", fontWeight: 600, fontSize: 20 }}>
+                Counting: {(() => {
+                  // Find the current count for the exercise
+                  // For time-based exercises, count up to duration
+                  // For rep-based exercises, count up to reps
+                  if (currentExercise !== null) {
+                    const allExercises = [...exercises, ...coreStrengthExercises, ...yogaExercises];
+                    const ex = allExercises[currentExercise];
+                    const count = ex.type === "reps" ? ex.reps : ex.duration;
+                    // Use a stateful counter for the modal
+                    // We'll use a React state for modalCount
+                    if (typeof modalCount !== 'undefined') {
+                      return modalCount <= count ? modalCount : "Done!";
+                    }
+                  }
+                  return null;
+                })()}
+              </div>
+            )}
             {showAppreciation && (
               <div style={{ marginTop: 18, color: "#ffe066", fontWeight: 700, fontSize: 28, background: "#222", borderRadius: 8, padding: 12, textAlign: "center" }}>{showAppreciation}</div>
             )}
