@@ -269,7 +269,7 @@ export default function CompanionRoom() {
   const musicTracks = [
     {
       title: "Calm Meditation",
-      url: "/videoplayback.mp3",
+      url: "/Calm Meditation.mp3",
       duration: "5:30"
     },
     {
