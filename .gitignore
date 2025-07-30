@@ -7,11 +7,15 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+Companion App Setup 0.0.0.exe
 node_modules
 dist
 dist-ssr
+dist-electron
+dist-electron-win32-x64
 *.local
-
+win-unpacked
+Companion App.exe
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -22,6 +26,27 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Electron build files
+*.exe
+*.asar
+dist-electron/
+*.exe
+*.dmg
+*.AppImage
+*.deb
+*.rpm
+*.snap
+*.asar
+dist-electron/Companion App Setup 0.0.0.exe
+dist-electron/win-unpacked/Companion App.exe
+dist-electron/win-unpacked/resources/app.asar
+dist-electron/win-unpacked/resources/app.asar.unpacked
+dist-electron/win-unpacked/resources/app.asar.unpacked.js
+dist-electron/win-unpacked/resources/app.asar.unpacked.js.map
+dist-electron/win-unpacked/resources/app.asar.unpacked.js.map.gz
+dist-electron/win-unpacked/resources/app.asar.unpacked.js.map.gz.map
+dist-electron/win-unpacked/resources/app.asar.unpacked.js.map.gz.map.gz
 
 public/peaceful.mp3
 public/videoplayback.mp3
