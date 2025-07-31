@@ -1,8 +1,11 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { useElectron } from "@/hooks/useElectron";
+import ElectronTitleBar from "@/components/ElectronTitleBar";
 
 export default function Index() {
   const navigate = useNavigate();
+  const { isElectron } = useElectron();
 
   const handleClick = () => {
     navigate("/room");
@@ -16,9 +19,11 @@ export default function Index() {
         width: "100vw",
         overflow: "hidden",
         fontFamily: "'Quicksand', 'Nunito', Arial, sans-serif",
-        background: "radial-gradient(circle at 20% 30%, #a259c6 0%, #e66465 100%)"
+        background: "radial-gradient(circle at 20% 30%, #a259c6 0%, #e66465 100%)",
+        paddingTop: isElectron ? "32px" : "0", // Add padding for title bar in Electron
       }}
     >
+      <ElectronTitleBar />
       {/* Background Video */}
       <video
         autoPlay

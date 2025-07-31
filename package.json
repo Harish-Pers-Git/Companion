@@ -103,8 +103,9 @@
   },
   "build": {
     "appId": "com.companion.app",
-    "productName": "Companion App",
+    "productName": "AI Companion",
     "asar": true,
+    "compression": "maximum",
     "directories": {
       "output": "dist-electron",
       "buildResources": "public"
@@ -112,8 +113,21 @@
     "files": [
       "dist/**/*",
       "public/electron.js",
+      "public/preload.js",
       "package.json",
-      "public/**/*"
+      "public/**/*",
+      "!public/Sunset.mp4",
+      "!public/*.mp3"
+    ],
+    "extraResources": [
+      {
+        "from": "public/Sunset.mp4",
+        "to": "Sunset.mp4"
+      },
+      {
+        "from": "public/*.mp3",
+        "to": "."
+      }
     ],
     "win": {
       "target": [
@@ -122,21 +136,26 @@
           "arch": ["x64"]
         }
       ],
-      "icon": "public/202.ico"
+      "icon": "public/202.ico",
+      "requestedExecutionLevel": "asInvoker"
     },
     "mac": {
       "target": "dmg",
-      "icon": "public/202.ico"
+      "icon": "public/202.ico",
+      "category": "public.app-category.lifestyle"
     },
     "linux": {
       "target": "AppImage",
-      "icon": "public/202.ico"
+      "icon": "public/202.ico",
+      "category": "Utility"
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
-      "createStartMenuShortcut": true
+      "createStartMenuShortcut": true,
+      "shortcutName": "AI Companion",
+      "uninstallDisplayName": "AI Companion"
     }
   }
 }
