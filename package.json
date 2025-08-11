@@ -113,7 +113,8 @@
       "dist/**/*",
       "public/electron.js",
       "package.json",
-      "public/**/*"
+      "public/**/*",
+      "node_modules/**/*"
     ],
     "win": {
       "target": [

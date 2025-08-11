@@ -16,30 +16,12 @@ export default function Index() {
         width: "100vw",
         overflow: "hidden",
         fontFamily: "'Quicksand', 'Nunito', Arial, sans-serif",
-        background: "radial-gradient(circle at 20% 30%, #a259c6 0%, #e66465 100%)"
+        background: "url('Digital.png') no-repeat center center fixed",
+        backgroundSize: "cover"
+        
       }}
     >
-      {/* Background Video */}
-      <video
-        autoPlay
-        loop
-        muted
-        playsInline
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          width: '100vw',
-          height: '100vh',
-          objectFit: 'cover',
-          zIndex: 0,
-          opacity: 0.45,
-          pointerEvents: 'none',
-        }}
-      >
-        <source src="/Sunset.mp4" type="video/mp4" />
-        Your browser does not support the video tag.
-      </video> 
+      {/* Background handled by CSS above */}
       {/* Ribbons background */}
       <div
         style={{

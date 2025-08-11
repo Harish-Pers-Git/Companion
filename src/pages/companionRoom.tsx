@@ -35,31 +35,31 @@ const exercises: Exercise[] = [
   {
     name: "March in Place",
     duration: 10, // seconds
-    gif: "/march.gif",
+    gif: "march.gif",
     type: "time",
   },
   {
     name: "Arm Circles",
     duration: 30, // seconds each direction
-    gif: "/arm-circles.gif",
+    gif: "arm-circles.gif",
     type: "time",
   },
   {
     name: "Toe Touch + Reach Up",
     reps: 10,
-    gif: "/toe-touch.gif",
+    gif: "toe-touch.gif",
     type: "reps",
   },
   {
     name: "Neck Rolls",
     duration: 30, // seconds each side
-    gif: "/neck-rolls.gif",
+    gif: "neck-rolls.gif",
     type: "time",
   },
   {
     name: "Side Stepping",
     duration: 60, // seconds
-    gif: "/side-stepping.gif",
+    gif: "side-stepping.gif",
     type: "time",
   },
 ];
@@ -69,7 +69,7 @@ const coreStrengthExercises: Exercise[] = [
     name: "Wall Push-Ups",
     duration: 15,
     reps: 10,
-    gif: "/wall-pushups.gif",
+    gif: "wall-pushups.gif",
     type: "reps",
     focus: "Upper body control",
   },
@@ -77,7 +77,7 @@ const coreStrengthExercises: Exercise[] = [
     name: "Sit-to-Stand (Chair)",
     duration: 10,
     reps: 10,
-    gif: "/sit-to-stand.gif",
+    gif: "sit-to-stand.gif",
     type: "reps",
     focus: "Leg strength, coordination",
   },
@@ -85,7 +85,7 @@ const coreStrengthExercises: Exercise[] = [
     name: "Animal Walks",
     duration: 30,
     reps: 10,
-    gif: "/animal-walks.gif",
+    gif: "animal-walks.gif",
     type: "time",
     focus: "Full-body sensory integration",
   },
@@ -93,7 +93,7 @@ const coreStrengthExercises: Exercise[] = [
     name: "Ball Pass",
     duration: 10,
     reps: 10,
-    gif: "/ball-pass.gif",
+    gif: "ball-passs.gif",
     type: "reps",
     focus: "Eye-hand coordination",
   },
@@ -101,7 +101,7 @@ const coreStrengthExercises: Exercise[] = [
     name: "Dead Bug (on mat)",
     duration: 10,
     reps: 10,
-    gif: "/dead-bug.gif",
+    gif: "dead-bug.gif",
     type: "reps",
     focus: "Core stability",
   },
@@ -111,70 +111,70 @@ const yogaExercises: Exercise[] = [
   {
     name: "Tree Pose (Vrikshasana)",
     duration: 30,
-    gif: "/tree pose.jpg",
+    gif: "tree pose.jpg",
     type: "time",
     focus: "Balance and concentration",
   },
   {
     name: "Cat–Cow Pose (Marjaryasana–Bitilasana)",
     duration: 60,
-    gif: "/cat-cow.jpg",
+    gif: "cat-cow.gif",
     type: "time",
     focus: "Spinal flexibility and warm-up",
   },
   {
     name: "Child's Pose (Balasana)",
     duration: 45,
-    gif: "/Balasana.gif", // placeholder
+    gif: "Balasana.gif", // placeholder
     type: "time",
     focus: "Relaxation and gentle stretch",
   },
   {
     name: "Cobra Pose (Bhujangasana)",
     duration: 30,
-    gif: "/Cobra Pose.gif", // placeholder
+    gif: "Cobra Pose.gif", // placeholder
     type: "time",
     focus: "Spinal extension and chest opening",
   },
   {
     name: "Log Roll Pose (Reclining Twist)",
     duration: 40,
-    gif: "/side-stepping.gif", // placeholder
+    gif: "side-stepping.gif", // placeholder
     type: "time",
     focus: "Spinal mobility and relaxation",
   },
   {
     name: "Mountain Pose (Tadasana)",
     duration: 30,
-    gif: "/Mountain Pose.gif", // placeholder
+    gif: "Mountain Pose.gif", // placeholder
     type: "time",
     focus: "Posture and grounding",
   },
   {
     name: "Butterfly Pose (Baddha Konasana)",
     duration: 40,
-    gif: "/Butterfly Pose.gif", // placeholder
+    gif: "Butterfly Pose.gif", // placeholder
     type: "time",
     focus: "Hip opening and relaxation",
   },
   {
     name: "Bridge Pose (Setu Bandhasana)",
     duration: 40,
-    gif: "/Bridge Pose.gif", // placeholder
+    gif: "Bridge Pose.gif", // placeholder
     type: "time",
     focus: "Back strength and chest opening",
   },
   {
     name: "Lotus or Easy Sitting Pose (Sukhasana)",
     duration: 60,
-    gif: "/Lotus.jpg", // placeholder
+    gif: "Lotus.jpg", // placeholder
     type: "time",
     focus: "Calm and meditation",
   },
   {
     name: "Bee Breath (Bhramari Pranayama)",
     duration: 60,
-    gif: "/Bhramari Pranayama.jpg", // placeholder
+    gif: "Bhramari Pranayama.jpg", // placeholder
     type: "time",
     focus: "Breath control and relaxation",
   },
@@ -269,18 +269,18 @@ export default function CompanionRoom() {
   const musicTracks = [
     {
       title: "Calm Meditation",
-      url: "/Calm Meditation.mp3",
-      duration: "5:30"
+      url: "Calm Meditation.mp3",
+      duration: "2:20"
     },
     {
       title: "Peaceful Yoga Flow",
-      url: "/peaceful.mp3",
-      duration: "6:15"
+      url: "peaceful.mp3",
+      duration: "2:20"
     },
     {
       title: "Mindful Breathing",
-      url: "https://www.youtube.com/watch?v=YOUR_VIDEO_ID_3",
-      duration: "4:45"
+      url: "white-noise-188847.mp3",
+      duration: "20:01"
     }
   ];
 
@@ -481,7 +481,7 @@ export default function CompanionRoom() {
           filter: "blur(4px)",
         }}
       >
-        <source src="/Sunset.mp4" type="video/mp4" />
+        <source src="Digital.png"/>
       </video>
       <div
         style={{
@@ -490,7 +490,8 @@ export default function CompanionRoom() {
           left: 0,
           width: "100%",
           height: "100%",
-          background: "rgba(0, 0, 0, 0.5)",
+          background: "url('Digital.png') no-repeat center center fixed",
+          backgroundSize: "cover",
           zIndex: -1,
         }}
       />
@@ -589,7 +590,7 @@ export default function CompanionRoom() {
         {activeTab === "Companion" && (
           <div style={{ marginLeft: 60, marginBottom: 0, position: 'relative' }}>
             <img
-              src="/3d.png"
+              src="3d.png"
               alt="Avatar"
               onClick={toggleAsking}
               style={{ 
@@ -876,6 +877,7 @@ export default function CompanionRoom() {
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
+            justifyContent: "center",
             boxShadow: "0 8px 32px rgba(0,0,0,0.25)",
             position: "relative"
           }}>
@@ -885,8 +887,8 @@ export default function CompanionRoom() {
               return (
                 <>
                   <img src={ex.gif} alt={ex.name} style={{ width: 250, height: 220, borderRadius: 16, marginBottom: 24, objectFit: "contain" }} />
-                  <div style={{ fontWeight: 700, fontSize: 24, color: "#333", marginBottom: 8 }}>{ex.name}</div>
-                  <div style={{ fontSize: 18, color: "#555", marginBottom: 16 }}>
+                  <div style={{ fontWeight: 700, fontSize: 24, color: "#333", marginBottom: 8, textAlign: "center" }}>{ex.name}</div>
+                  <div style={{ fontSize: 18, color: "#555", marginBottom: 16, textAlign: "center" }}>
                     {ex.type === "reps"
                       ? `${ex.reps} reps`
                       : `${ex.duration} sec`}
@@ -896,7 +898,14 @@ export default function CompanionRoom() {
               );
             })()}
             {isPlaying && (
-              <div style={{ color: "#333", fontWeight: 600, fontSize: 20 }}>
+              <div style={{ 
+                color: "#333", 
+                fontWeight: 600, 
+                fontSize: 20,
+                textAlign: "center",
+                width: "100%",
+                marginTop: 16
+              }}>
                 Counting: {(() => {
                   // Find the current count for the exercise
                   // For time-based exercises, count up to duration

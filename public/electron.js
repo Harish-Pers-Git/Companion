@@ -16,7 +16,8 @@ function createWindow() {
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
-      webSecurity: false
+      webSecurity: false,
+      allowRunningInsecureContent: true
     },
     icon: path.join(__dirname, '202.ico'),
     show: false, // Don't show until ready
@@ -36,36 +37,40 @@ function createWindow() {
   } else {
     console.log('Running in production mode');
     
-    // Try multiple possible paths for the index.html file
-    const possiblePaths = [
-      path.join(__dirname, 'dist/index.html'),
-      path.join(__dirname, '../dist/index.html'),
-      path.join(__dirname, '../../dist/index.html'),
-      path.join(process.resourcesPath, 'app/dist/index.html'),
-      path.join(process.resourcesPath, 'dist/index.html'),
-      path.join(process.resourcesPath, 'app.asar/dist/index.html'),
-      path.join(__dirname, 'resources/app.asar/dist/index.html')
-    ];
+    // For production, load the index.html file
+    const indexPath = path.join(__dirname, 'dist', 'index.html');
+    console.log('Loading index.html from:', indexPath);
     
-    console.log('Possible paths:', possiblePaths);
-    
-    // Try to load the first path that exists
-    let indexPath = null;
-    
-    for (const possiblePath of possiblePaths) {
-      if (fs.existsSync(possiblePath)) {
-        indexPath = possiblePath;
-        console.log('Found index.html at:', indexPath);
-        break;
-      }
-    }
-    
-    if (indexPath) {
+    if (fs.existsSync(indexPath)) {
+      console.log('Found index.html, loading...');
       win.loadFile(indexPath);
     } else {
-      console.error('Could not find index.html in any of the expected locations');
-      // Create a simple error page
-      win.loadURL(`data:text/html,<html><body><h1>Error: Could not load app</h1><p>index.html not found</p></body></html>`);
+      console.error('index.html not found at:', indexPath);
+      
+      // Try alternative paths
+      const alternativePaths = [
+        path.join(process.resourcesPath, 'app.asar', 'dist', 'index.html'),
+        path.join(__dirname, '..', 'dist', 'index.html'),
+        path.join(__dirname, '..', '..', 'dist', 'index.html'),
+        path.join(process.resourcesPath, 'dist', 'index.html')
+      ];
+      
+      let found = false;
+      for (const altPath of alternativePaths) {
+        console.log('Trying alternative path:', altPath);
+        if (fs.existsSync(altPath)) {
+          console.log('Found index.html at:', altPath);
+          win.loadFile(altPath);
+          found = true;
+          break;
+        }
+      }
+      
+      if (!found) {
+        console.error('Could not find index.html in any location');
+        // Create a simple error page
+        win.loadURL(`data:text/html,<html><body><h1>Error: Could not load app</h1><p>index.html not found</p><p>Current directory: ${__dirname}</p></body></html>`);
+      }
     }
     
     // Add error handling for production
