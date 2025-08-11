@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useElectron } from '@/hooks/useElectron';
 
 // Single AudioContext for the component's lifecycle
 let audioContext: AudioContext | null = null;
@@ -62,6 +63,7 @@ const PianoKey = ({ noteName, isBlack, onPlay, isActive }: { noteName: string, i
 const PianoGame = () => {
   const [activeNotes, setActiveNotes] = useState<string[]>([]);
   const pianoRef = useRef<HTMLDivElement>(null);
+  const { isElectron } = useElectron();
 
   // Play a note
   const playNote = (noteName: string) => {
@@ -108,7 +110,11 @@ const PianoGame = () => {
   useEffect(() => {
     const initAudio = () => {
       if (!audioContext) {
-        audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+        try {
+          audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+        } catch (error) {
+          console.error('Failed to initialize AudioContext:', error);
+        }
       }
       document.removeEventListener('click', initAudio);
     };

@@ -50,3 +50,4 @@ dist-electron/win-unpacked/resources/app.asar.unpacked.js.map.gz.map.gz
 
 public/peaceful.mp3
 public/videoplayback.mp3
+.env

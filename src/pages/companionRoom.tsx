@@ -4,6 +4,8 @@ import { GiArtificialIntelligence, GiDuration } from "react-icons/gi"; // For Ac
 import { useNavigate } from "react-router-dom";
 import ReactPlayer from "react-player";
 import PianoGame from "../components/PianoGame";
+import { useElectron } from "@/hooks/useElectron";
+import ElectronTitleBar from "@/components/ElectronTitleBar";
 
 // Global speech reference to track current utterance
 let currentUtterance: SpeechSynthesisUtterance | null = null;
@@ -244,6 +246,7 @@ function startSynchronizedCountdown(countTo, setModalCount, onDone) {
 
 export default function CompanionRoom() {
   const navigate = useNavigate();
+  const { isElectron } = useElectron();
   const [activeTab, setActiveTab] = useState("Companion");
   const [currentExercise, setCurrentExercise] = useState<number | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -463,8 +466,10 @@ export default function CompanionRoom() {
         color: "#fff",
         fontFamily: "Quicksand, Nunito, Arial, sans-serif",
         position: "relative",
+        paddingTop: isElectron ? "32px" : "0", // Add padding for title bar in Electron
       }}
     >
+      <ElectronTitleBar />
       <video
         autoPlay
         loop

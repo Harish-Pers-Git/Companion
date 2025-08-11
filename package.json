@@ -58,6 +58,7 @@
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",
     "date-fns": "^3.6.0",
+    "electron-is-dev": "^3.0.1",
     "embla-carousel-react": "^8.3.0",
     "input-otp": "^1.2.4",
     "lucide-react": "^0.462.0",
@@ -76,13 +77,12 @@
     "tailwind-merge": "^2.5.2",
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^0.9.3",
-    "zod": "^3.23.8",
-    "electron-is-dev": "^3.0.1"
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.0",
     "@tailwindcss/typography": "^0.5.15",
-    "@types/node": "^22.5.5",
+    "@types/node": "^22.17.0",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react-swc": "^3.5.0",
@@ -96,6 +96,7 @@
     "globals": "^15.9.0",
     "postcss": "^8.4.47",
     "tailwindcss": "^3.4.11",
+    "terser": "^5.43.1",
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.0.1",
     "vite": "^5.4.1",
@@ -103,8 +104,9 @@
   },
   "build": {
     "appId": "com.companion.app",
-    "productName": "Companion App",
+    "productName": "AI Companion",
     "asar": true,
+    "compression": "maximum",
     "directories": {
       "output": "dist-electron",
       "buildResources": "public"
@@ -112,32 +114,39 @@
     "files": [
       "dist/**/*",
       "public/electron.js",
+      "public/preload.js",
       "package.json",
-      "public/**/*",
-      "node_modules/**/*"
+      "public/**/*"
     ],
     "win": {
       "target": [
         {
           "target": "nsis",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
-      "icon": "public/202.ico"
+      "icon": "public/202.ico",
+      "requestedExecutionLevel": "asInvoker"
     },
     "mac": {
       "target": "dmg",
-      "icon": "public/202.ico"
+      "icon": "public/202.ico",
+      "category": "public.app-category.lifestyle"
     },
     "linux": {
       "target": "AppImage",
-      "icon": "public/202.ico"
+      "icon": "public/202.ico",
+      "category": "Utility"
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
-      "createStartMenuShortcut": true
+      "createStartMenuShortcut": true,
+      "shortcutName": "AI Companion",
+      "uninstallDisplayName": "AI Companion"
     }
   }
 }

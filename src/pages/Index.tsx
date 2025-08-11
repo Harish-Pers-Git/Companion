@@ -1,8 +1,11 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { useElectron } from "@/hooks/useElectron";
+import ElectronTitleBar from "@/components/ElectronTitleBar";
 
 export default function Index() {
   const navigate = useNavigate();
+  const { isElectron } = useElectron();
 
   const handleClick = () => {
     navigate("/room");
@@ -17,11 +20,32 @@ export default function Index() {
         overflow: "hidden",
         fontFamily: "'Quicksand', 'Nunito', Arial, sans-serif",
         background: "url('Digital.png') no-repeat center center fixed",
-        backgroundSize: "cover"
-        
+        backgroundSize: "cover",
+        paddingTop: isElectron ? "32px" : "0",
       }}
     >
-      {/* Background handled by CSS above */}
+      {isElectron && <ElectronTitleBar />}
+      {/* Background Video */}
+      <video
+        autoPlay
+        loop
+        muted
+        playsInline
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          objectFit: 'cover',
+          zIndex: 0,
+          opacity: 0.45,
+          pointerEvents: 'none',
+        }}
+      >
+        <img src="Digital.png"/>
+        Your browser does not support the video tag.
+      </video> 
       {/* Ribbons background */}
       <div
         style={{
